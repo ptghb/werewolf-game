@@ -12,19 +12,19 @@ function PlayerList({ players, selectable, selectedId, onSelect }) {
           <div
             key={player.id}
             className={`player-item ${player.alive ? '' : 'dead'} ${
-              selectable && player.alive && !player.is_human ? 'selectable' : ''
+              selectable && player.alive && !player.isHuman ? 'selectable' : ''
             } ${selectedId === player.id ? 'selected' : ''}`}
             onClick={() => {
-              if (selectable && player.alive && !player.is_human) {
+              if (selectable && player.alive && !player.isHuman) {
                 onSelect(player.id)
               }
             }}
           >
-            <div className="player-avatar">{player.is_human ? '😎' : '🤖'}</div>
+            <div className="player-avatar">{player.isHuman ? '😎' : '🤖'}</div>
             <div className="player-info">
-              <div className="player-name">{player.name}{player.is_human ? ' (我)' : ''}</div>
+              <div className="player-name">{player.name}{player.isHuman ? ' (我)' : ''}</div>
               <div className="player-role-tag">
-                {player.role_visible ? player.role : '身份未知'}
+                {player.roleVisible ? player.role : '身份未知'}
               </div>
             </div>
           </div>

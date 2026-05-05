@@ -35,7 +35,7 @@ def test_begin_discussion_round_sets_player_message_action():
 
     assert discussion_state.phase is GamePhase.DISCUSSION
     assert discussion_state.pending_action is not None
-    assert discussion_state.pending_action.kind == "submit_discussion_message"
+    assert discussion_state.pending_action.kind == "submitDiscussionMessage"
 
 
 def test_check_winner_returns_good_when_no_wolves_alive():

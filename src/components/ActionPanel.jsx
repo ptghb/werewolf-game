@@ -8,7 +8,7 @@ function ActionPanel({ actionRequest, selectedTarget, discussionMessage, onSelec
     )
   }
 
-  if (actionRequest.kind === 'submit_discussion_message') {
+  if (actionRequest.kind === 'submitDiscussionMessage') {
     return (
       <div className="action-panel">
         <div className="action-title">💬 白天发言</div>
@@ -31,8 +31,8 @@ function ActionPanel({ actionRequest, selectedTarget, discussionMessage, onSelec
       <div className="action-title">{actionRequest.prompt}</div>
       <div className="action-desc">{selectedTarget ? `已选择 ${selectedTarget}` : '请先在玩家列表中选择目标'}</div>
       <div className="action-buttons">
-        <button className="btn btn-primary" disabled={!selectedTarget} onClick={() => onSubmitAction({ target_id: selectedTarget })}>确认</button>
-        {actionRequest.allow_skip ? <button className="btn btn-ghost" onClick={onSkip}>跳过</button> : null}
+        <button className="btn btn-primary" disabled={!selectedTarget} onClick={() => onSubmitAction({ targetId: selectedTarget })}>确认</button>
+        {actionRequest.allowSkip ? <button className="btn btn-ghost" onClick={onSkip}>跳过</button> : null}
       </div>
     </div>
   )

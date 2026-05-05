@@ -6,25 +6,36 @@ from .models import ActionRequest, GamePhase, PlayerView
 
 def build_snapshot(
     *,
-    session_id: str,
+    sessionId: str,
     phase: GamePhase,
-    round_number: int,
-    self_role: Optional[str],
+    roundNumber: int,
+    selfRole: Optional[str],
     players: List[PlayerView],
     timeline: List[dict],
-    available_actions: List[dict],
+    availableActions: List[dict],
     winner: Optional[str],
 ) -> dict:
     return {
-        "type": "state_snapshot",
+        "type": "stateSnapshot",
         "payload": {
-            "session_id": session_id,
+            "sessionId": sessionId,
             "phase": phase.value,
-            "round_number": round_number,
-            "self_role": self_role,
-            "players": [asdict(player) for player in players],
+            "roundNumber": roundNumber,
+            "selfRole": selfRole,
+            "players": [
+                {
+                    "id": player.id,
+                    "name": player.name,
+                    "alive": player.alive,
+                    "isHuman": player.is_human,
+                    "role": player.role,
+                    "roleVisible": player.role_visible,
+                    "persona": player.persona,
+                }
+                for player in players
+            ],
             "timeline": timeline,
-            "available_actions": available_actions,
+            "availableActions": availableActions,
             "winner": winner,
         },
     }
@@ -32,16 +43,21 @@ def build_snapshot(
 
 def build_action_required(request: ActionRequest) -> dict:
     return {
-        "type": "action_required",
-        "payload": asdict(request),
+        "type": "actionRequired",
+        "payload": {
+            "kind": request.kind,
+            "prompt": request.prompt,
+            "options": request.options,
+            "allowSkip": request.allow_skip,
+        },
     }
 
 
-def build_event(event_type: str, text: str) -> dict:
+def build_event(eventType: str, text: str) -> dict:
     return {
-        "type": "game_event",
+        "type": "gameEvent",
         "payload": {
-            "event_type": event_type,
+            "eventType": eventType,
             "text": text,
         },
     }
@@ -49,7 +65,7 @@ def build_event(event_type: str, text: str) -> dict:
 
 def build_game_over(winner: str, summary: str) -> dict:
     return {
-        "type": "game_over",
+        "type": "gameOver",
         "payload": {
             "winner": winner,
             "summary": summary,

@@ -6,28 +6,28 @@ from backend.app.session_manager import SessionManager
 
 def test_build_snapshot_keeps_available_actions_shape():
     payload = build_snapshot(
-        session_id="session-1",
+        sessionId="session-1",
         phase=GamePhase.DISCUSSION,
-        round_number=2,
-        self_role="villager",
+        roundNumber=2,
+        selfRole="villager",
         players=[
             PlayerView(id="p1", name="旅人", alive=True, is_human=True, role="villager", role_visible=True),
         ],
         timeline=[],
-        available_actions=[{"kind": "submit_discussion_message", "label": "发言"}],
+        availableActions=[{"kind": "submitDiscussionMessage", "label": "发言"}],
         winner=None,
     )
 
-    assert payload["type"] == "state_snapshot"
-    assert payload["payload"]["available_actions"][0]["kind"] == "submit_discussion_message"
+    assert payload["type"] == "stateSnapshot"
+    assert payload["payload"]["availableActions"][0]["kind"] == "submitDiscussionMessage"
 
 
 def test_build_action_required_emits_expected_type():
     payload = build_action_required(
-        ActionRequest(kind="vote", prompt="请选择投票目标", options=[{"player_id": "p2", "label": "玩家2"}])
+        ActionRequest(kind="vote", prompt="请选择投票目标", options=[{"playerId": "p2", "label": "玩家2"}])
     )
 
-    assert payload["type"] == "action_required"
+    assert payload["type"] == "actionRequired"
     assert payload["payload"]["kind"] == "vote"
 
 

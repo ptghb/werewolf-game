@@ -5,13 +5,17 @@ from typing import Any, List, Optional
 
 class GamePhase(str, Enum):
     LOBBY = "lobby"
-    ROLE_REVEAL = "role_reveal"
-    NIGHT = "night"
+    ROLE_REVEAL = "roleReveal"
+    NIGHT_START = "nightStart"
+    WOLF_TURN = "wolfTurn"
+    SEER_TURN = "seerTurn"
+    WITCH_TURN = "witchTurn"
+    NIGHT_END = "nightEnd"
     DAYBREAK = "daybreak"
     DISCUSSION = "discussion"
     VOTE = "vote"
     RESULT = "result"
-    GAME_OVER = "game_over"
+    GAME_OVER = "gameOver"
 
 
 @dataclass
@@ -52,6 +56,16 @@ class ActionRequest:
 
 
 @dataclass
+class NightActions:
+    werewolf_target: Optional[str] = None
+    seer_target: Optional[str] = None
+    seer_result: Optional[bool] = None
+    witch_save_used: bool = False
+    witch_poison_used: bool = False
+    witch_poison_target: Optional[str] = None
+
+
+@dataclass
 class GameState:
     session_id: str
     phase: GamePhase
@@ -62,3 +76,5 @@ class GameState:
     winner: Optional[str] = None
     human_player_id: str = "p1"
     pending_action: Optional[ActionRequest] = None
+    night_actions: NightActions = field(default_factory= NightActions)
+    deaths: List[str] = field(default_factory=list)
