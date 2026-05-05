@@ -92,7 +92,15 @@ def advance_to_witch_turn(state: GameState) -> GameState:
     human = next(p for p in state.players if p.is_human)
     pending_action = None
     if human.role == "witch" and human.alive:
-        pending_action = ActionRequest(kind="witchAction", prompt="女巫请选择行动")
+        pending_action = ActionRequest(
+            kind="witchAction",
+            prompt="女巫请选择行动",
+            options=[
+                {"action": "save", "label": "使用解药"},
+                {"action": "poison", "label": "使用毒药"},
+                {"action": "skip", "label": "跳过"},
+            ],
+        )
     return GameState(
         session_id=state.session_id,
         phase=GamePhase.WITCH_TURN,
