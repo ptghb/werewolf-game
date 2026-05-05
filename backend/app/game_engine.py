@@ -231,11 +231,11 @@ def submit_human_vote(state: GameState, target_id: str, ai_votes: dict) -> GameS
 def set_wolf_target(state: GameState, target_id: str) -> GameState:
     night_actions = NightActions(
         werewolf_target=target_id,
-        seer_target=None,
-        seer_result=None,
-        witch_save_used=False,
-        witch_poison_used=False,
-        witch_poison_target=None,
+        seer_target=state.night_actions.seer_target,
+        seer_result=state.night_actions.seer_result,
+        witch_save_used=state.night_actions.witch_save_used,
+        witch_poison_used=state.night_actions.witch_poison_used,
+        witch_poison_target=state.night_actions.witch_poison_target,
     )
     return GameState(
         session_id=state.session_id,
@@ -252,12 +252,12 @@ def set_seer_check(state: GameState, target_id: str) -> GameState:
     target_player = next(p for p in state.players if p.id == target_id)
     is_werewolf = target_player.role == "werewolf"
     night_actions = NightActions(
-        werewolf_target=None,
+        werewolf_target=state.night_actions.werewolf_target,
         seer_target=target_id,
         seer_result=is_werewolf,
-        witch_save_used=False,
-        witch_poison_used=False,
-        witch_poison_target=None,
+        witch_save_used=state.night_actions.witch_save_used,
+        witch_poison_used=state.night_actions.witch_poison_used,
+        witch_poison_target=state.night_actions.witch_poison_target,
     )
     result_text = f"🔮 查验结果：{target_player.name} 是 {'狼人' if is_werewolf else '好人'}"
     return GameState(
@@ -267,15 +267,15 @@ def set_seer_check(state: GameState, target_id: str) -> GameState:
         players=state.players,
         timeline=state.timeline + [TimelineEvent(type="system", text=result_text)],
         human_player_id=state.human_player_id,
-        night_actions=NightActions(werewolf_target=None, seer_target=None, seer_result=None),
+        night_actions=night_actions,
     )
 
 
 def set_witch_action(state: GameState, save_used: bool, poison_target: Optional[str]) -> GameState:
     night_actions = NightActions(
-        werewolf_target=None,
-        seer_target=None,
-        seer_result=None,
+        werewolf_target=state.night_actions.werewolf_target,
+        seer_target=state.night_actions.seer_target,
+        seer_result=state.night_actions.seer_result,
         witch_save_used=True if save_used else False,
         witch_poison_used=True if poison_target else False,
         witch_poison_target=None if save_used else poison_target,
@@ -287,5 +287,5 @@ def set_witch_action(state: GameState, save_used: bool, poison_target: Optional[
         players=state.players,
         timeline=state.timeline + [TimelineEvent(type="action", text=f"女巫使用了 {'解药' if save_used else ''} {'毒药' if poison_target else ''}".strip() + "。")],
         human_player_id=state.human_player_id,
-        night_actions=NightActions(werewolf_target=None),
+        night_actions=night_actions,
     )
