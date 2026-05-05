@@ -1,6 +1,7 @@
 from backend.app.message_schema import build_action_required, build_snapshot
 from backend.app.models import ActionRequest, GamePhase, PlayerView
 from backend.app.ai_dialogue import build_dialogue_prompt
+from backend.app.session_manager import SessionManager
 
 
 def test_build_snapshot_keeps_available_actions_shape():
@@ -43,3 +44,13 @@ def test_build_dialogue_prompt_mentions_role_and_goal():
     assert "玩家2" in prompt
     assert "seer" in prompt
     assert "soft-push 玩家4" in prompt
+
+
+def test_session_manager_creates_retrievable_state():
+    manager = SessionManager()
+
+    session_id = manager.create_session(player_name="旅人", room_size=6)
+    state = manager.get_state(session_id)
+
+    assert session_id.startswith("session-")
+    assert state.session_id == session_id
