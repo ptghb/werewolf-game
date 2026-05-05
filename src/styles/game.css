@@ -631,7 +631,7 @@
 
 /* Night Phase Overlay */
 .night-phase-overlay {
-  position: fixed;
+  position: relative;
   top: 0;
   left: 0;
   right: 0;
@@ -678,7 +678,7 @@
 }
 
 .player-select-btn {
-  padding .5rem;
+  padding: .5rem;
 }
 
 /* Witch Action Buttons */
