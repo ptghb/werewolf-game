@@ -125,7 +125,7 @@ def resolve_night(state: GameState) -> tuple[GameState, List[str]]:
 
     # 女巫救人
     saved = False
-    if night.werewolf_target and not night.witch_save_used:
+    if night.werewolf_target and night.witch_save_used:
         if night.werewolf_target in deaths:
             deaths.remove(night.werewolf_target)
             saved = True
