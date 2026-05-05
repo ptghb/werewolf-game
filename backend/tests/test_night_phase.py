@@ -142,3 +142,93 @@ def test_decide_witch_action_returns_valid_decision():
 
     # 应该救人、毒人或跳过之一
     assert action["save"] or action["poison"] is not None or action["skip"]
+
+
+def test_decide_witch_action_no_save_when_no_werewolf_target():
+    """When werewolf_target is None, save should be False (no kill means no antidote used)."""
+    import random as _random
+    from backend.app.ai_strategy import decide_witch_action
+    from backend.app.models import NightActions, PlayerState
+
+    players = [
+        PlayerState(id="p1", name="Human", is_human=True, role="villager", alive=True),
+        PlayerState(id="p2", name="AI Wolf", is_human=False, role="werewolf", alive=True),
+        PlayerState(id="p3", name="AI Witch", is_human=False, role="witch", alive=True),
+    ]
+    night_actions = NightActions(werewolf_target=None)
+
+    _random.seed(42)
+    action = decide_witch_action(players, night_actions)
+
+    assert action["save"] is False
+
+
+def test_decide_witch_action_save_when_random_below_50():
+    """When werewolf_target exists and random < 0.5, save should be True."""
+    import random as _random
+    from backend.app.ai_strategy import decide_witch_action
+    from backend.app.models import NightActions, PlayerState
+
+    players = [
+        PlayerState(id="p1", name="Human", is_human=True, role="villager", alive=True),
+        PlayerState(id="p2", name="AI Wolf", is_human=False, role="werewolf", alive=True),
+        PlayerState(id="p3", name="AI Witch", is_human=False, role="witch", alive=True),
+    ]
+    night_actions = NightActions(werewolf_target="p1")
+
+    # Seed that produces random() < 0.5 for the save decision
+    _random.seed(1)
+    action = decide_witch_action(players, night_actions)
+
+    assert action["save"] is True
+
+
+def test_decide_witch_action_poison_targets_ai_wolves():
+    """Poison targets must be actual alive AI wolves (not human, not dead)."""
+    import random as _random
+    from backend.app.ai_strategy import decide_witch_action
+    from backend.app.models import NightActions, PlayerState
+
+    players = [
+        PlayerState(id="p1", name="Human Villager", is_human=True, role="villager", alive=True),
+        PlayerState(id="p2", name="AI Wolf 1", is_human=False, role="werewolf", alive=True),
+        PlayerState(id="p3", name="AI Wolf 2", is_human=False, role="werewolf", alive=True),
+        PlayerState(id="p4", name="AI Witch", is_human=False, role="witch", alive=True),
+        PlayerState(id="p5", name="Dead AI Wolf", is_human=False, role="werewolf", alive=False),
+        PlayerState(id="p6", name="Human Werewolf", is_human=True, role="werewolf", alive=True),
+    ]
+    # No werewolf target so save won't happen, allowing poison logic to run
+    night_actions = NightActions(werewolf_target=None)
+
+    # Seed that produces random() >= 0.5 for save but < 0.3 for poison
+    _random.seed(123456789)
+    action = decide_witch_action(players, night_actions)
+
+    if action["poison"] is not None:
+        target = next((p for p in players if p.id == action["poison"]), None)
+        assert target is not None
+        assert target.role == "werewolf"
+        assert target.alive is True
+        assert target.is_human is False
+
+
+def test_decide_witch_action_skip_when_no_save_no_poison():
+    """Skip is True when neither save nor poison action is taken."""
+    import random as _random
+    from backend.app.ai_strategy import decide_witch_action
+    from backend.app.models import NightActions, PlayerState
+
+    players = [
+        PlayerState(id="p1", name="Human Villager", is_human=True, role="villager", alive=True),
+        PlayerState(id="p2", name="AI Wolf 1", is_human=False, role="werewolf", alive=True),
+        PlayerState(id="p3", name="AI Witch", is_human=False, role="witch", alive=True),
+    ]
+    night_actions = NightActions(werewolf_target=None)
+
+    # Seed that produces random() >= 0.5 for save and >= 0.3 for poison (neither happens)
+    _random.seed(999)
+    action = decide_witch_action(players, night_actions)
+
+    assert action["save"] is False
+    assert action["poison"] is None
+    assert action["skip"] is True
