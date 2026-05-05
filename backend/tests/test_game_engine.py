@@ -1,0 +1,27 @@
+from backend.app.game_engine import create_game, start_game, submit_human_vote
+from backend.app.models import GamePhase
+
+
+def test_start_game_assigns_roles_and_enters_role_reveal():
+    state = create_game(session_id="s1", player_name="旅人", room_size=6)
+
+    started = start_game(state)
+
+    assert started.phase is GamePhase.ROLE_REVEAL
+    assert len(started.players) == 6
+    assert sorted(player.role for player in started.players).count("werewolf") == 1
+    assert sorted(player.role for player in started.players).count("seer") == 1
+    assert sorted(player.role for player in started.players).count("witch") == 1
+    assert sorted(player.role for player in started.players).count("villager") == 3
+
+
+def test_submit_human_vote_eliminates_top_target_and_enters_result():
+    state = create_game(session_id="s1", player_name="旅人", room_size=6)
+    started = start_game(state)
+    started.phase = GamePhase.VOTE
+
+    updated = submit_human_vote(started, target_id="p2", ai_votes={"p3": "p2", "p4": "p2", "p5": "p6", "p6": "p2"})
+
+    eliminated = next(player for player in updated.players if player.id == "p2")
+    assert eliminated.alive is False
+    assert updated.phase is GamePhase.RESULT
