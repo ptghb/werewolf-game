@@ -27,6 +27,8 @@ function NightPhase({ phase, players, selectedTarget, onSelectTarget, onSubmitAc
         return (
           <WitchAction
             players={players}
+            selectedTarget={selectedTarget}
+            onSelectTarget={onSelectTarget}
             onSubmitAction={onSubmitAction}
           />
         )
