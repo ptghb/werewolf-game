@@ -1,4 +1,4 @@
-from backend.app.game_engine import create_game, start_game, submit_human_vote
+from backend.app.game_engine import advance_from_role_reveal, begin_discussion_round, check_winner, create_game, start_game, submit_discussion_message, submit_human_vote
 from backend.app.models import GamePhase
 
 
@@ -25,3 +25,23 @@ def test_submit_human_vote_eliminates_top_target_and_enters_result():
     eliminated = next(player for player in updated.players if player.id == "p2")
     assert eliminated.alive is False
     assert updated.phase is GamePhase.RESULT
+
+
+def test_begin_discussion_round_sets_player_message_action():
+    state = start_game(create_game(session_id="s1", player_name="旅人", room_size=6))
+    state = advance_from_role_reveal(state)
+
+    discussion_state = begin_discussion_round(state)
+
+    assert discussion_state.phase is GamePhase.DISCUSSION
+    assert discussion_state.pending_action is not None
+    assert discussion_state.pending_action.kind == "submit_discussion_message"
+
+
+def test_check_winner_returns_good_when_no_wolves_alive():
+    state = start_game(create_game(session_id="s1", player_name="旅人", room_size=6))
+    for player in state.players:
+        if player.role == "werewolf":
+            player.alive = False
+
+    assert check_winner(state) == "good"

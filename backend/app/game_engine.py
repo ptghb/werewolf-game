@@ -58,3 +58,48 @@ def submit_human_vote(state: GameState, target_id: str, ai_votes: dict) -> GameS
         timeline=state.timeline + [TimelineEvent(type="vote", text=f"{top_target} 被投票出局。")],
         human_player_id=state.human_player_id,
     )
+
+
+def advance_from_role_reveal(state: GameState) -> GameState:
+    return GameState(
+        session_id=state.session_id,
+        phase=GamePhase.DAYBREAK,
+        round_number=state.round_number,
+        players=state.players,
+        timeline=state.timeline + [TimelineEvent(type="phase", text=f"第 {state.round_number} 天开始。")],
+        human_player_id=state.human_player_id,
+    )
+
+
+def begin_discussion_round(state: GameState) -> GameState:
+    return GameState(
+        session_id=state.session_id,
+        phase=GamePhase.DISCUSSION,
+        round_number=state.round_number,
+        players=state.players,
+        timeline=state.timeline,
+        human_player_id=state.human_player_id,
+        pending_action=ActionRequest(kind="submit_discussion_message", prompt="请输入你的白天发言"),
+    )
+
+
+def check_winner(state: GameState) -> str:
+    alive_wolves = [player for player in state.players if player.alive and player.role == "werewolf"]
+    alive_good = [player for player in state.players if player.alive and player.role != "werewolf"]
+    if not alive_wolves:
+        return "good"
+    if len(alive_wolves) >= len(alive_good):
+        return "wolf"
+    return None
+
+
+def submit_discussion_message(state: GameState, text: str) -> GameState:
+    return GameState(
+        session_id=state.session_id,
+        phase=GamePhase.VOTE,
+        round_number=state.round_number,
+        players=state.players,
+        timeline=state.timeline + [TimelineEvent(type="speech", text=f"旅人：{text}")],
+        human_player_id=state.human_player_id,
+        pending_action=ActionRequest(kind="vote", prompt="请选择你要投票的玩家", allow_skip=True),
+    )
