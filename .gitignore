@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 .worktrees/
+backend/.env
+backend/.venv/
+__pycache__/
+.pytest_cache/
 
 # Editor directories and files
 .vscode/*
