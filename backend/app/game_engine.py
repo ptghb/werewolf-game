@@ -119,7 +119,10 @@ def resolve_night(state: GameState) -> tuple[GameState, List[str]]:
 
     # 狼人击杀
     if night.werewolf_target:
-        target_player = next(p for p in state.players if p.id == night.werewolf_target)
+        target_player = next((p for p in state.players if p.id == night.werewolf_target), None)
+        if target_player is None:
+            # Target does not exist - return original state
+            return state, []
         if target_player.alive:
             deaths.append(night.werewolf_target)
 
@@ -150,7 +153,16 @@ def resolve_night(state: GameState) -> tuple[GameState, List[str]]:
     else:
         timeline.append(TimelineEvent(type="system", text="昨晚是平安夜。"))
 
-    return state, deaths
+    new_state = GameState(
+        session_id=state.session_id,
+        phase=state.phase,
+        round_number=state.round_number,
+        players=players,
+        timeline=timeline,
+        human_player_id=state.human_player_id,
+        night_actions=state.night_actions,
+    )
+    return new_state, deaths
 
 
 def advance_to_daybreak(state: GameState) -> GameState:
