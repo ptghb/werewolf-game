@@ -12,6 +12,7 @@ from .game_engine import (
     begin_discussion_round,
     check_winner,
     resolve_night,
+    set_witch_action,
     set_wolf_target,
     start_game,
     submit_discussion_message,
@@ -113,7 +114,8 @@ async def handle_connection(websocket):
 
                 # 如果人类是狼人，使用人类选择的目标；否则 AI 选择
                 if human.role == "werewolf":
-                    state = set_wolf_target(state, targetId)
+                    if targetId:
+                        state = set_wolf_target(state, targetId)
                 else:
                     ai_target = choose_night_target(state.players)
                     if ai_target:
@@ -134,10 +136,8 @@ async def handle_connection(websocket):
                 else:
                     # AI 女巫行动
                     ai_decision = decide_witch_action(state.players, state.night_actions)
-                    if ai_decision["save"]:
-                        state.night_actions.witch_save_used = True
-                    elif ai_decision["poison"]:
-                        state.night_actions.witch_poison_target = ai_decision["poison"]
+                    if ai_decision["save"] or ai_decision["poison"]:
+                        state = set_witch_action(state, save_used=ai_decision["save"], poison_target=ai_decision["poison"])
 
                     # 进入夜晚结算和天亮
                     resolved, deaths = resolve_night(state)
@@ -152,11 +152,11 @@ async def handle_connection(websocket):
                 action_data = payload.get("actionData", {})
 
                 if action_data.get("action") == "save":
-                    state.night_actions.witch_save_used = True
+                    state = set_witch_action(state, save_used=True, poison_target=None)
                 elif action_data.get("action") == "poison":
                     targetId = action_data.get("targetId")
                     if targetId:
-                        state.night_actions.witch_poison_target = targetId
+                        state = set_witch_action(state, save_used=False, poison_target=targetId)
 
                 manager.set_state(sessionId, state)
 

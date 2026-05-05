@@ -173,6 +173,7 @@ def advance_to_daybreak(state: GameState) -> GameState:
         players=state.players,
         timeline=state.timeline + [TimelineEvent(type="phase", text=f"第 {state.round_number} 天亮了，请睁眼。")],
         human_player_id=state.human_player_id,
+        night_actions=state.night_actions,
     )
 
 
