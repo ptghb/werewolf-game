@@ -125,3 +125,20 @@ def test_advance_to_daybreak():
     daybreak_state = advance_to_daybreak(started)
 
     assert daybreak_state.phase is GamePhase.DAYBREAK
+
+
+def test_decide_witch_action_returns_valid_decision():
+    from backend.app.ai_strategy import decide_witch_action
+    from backend.app.models import NightActions, PlayerState
+
+    players = [
+        PlayerState(id="p1", name="Human", is_human=True, role="villager", alive=True),
+        PlayerState(id="p2", name="AI Wolf", is_human=False, role="werewolf", alive=True),
+        PlayerState(id="p3", name="AI Witch", is_human=False, role="witch", alive=True),
+    ]
+    night_actions = NightActions(werewolf_target="p1")
+
+    action = decide_witch_action(players, night_actions)
+
+    # 应该救人、毒人或跳过之一
+    assert action["save"] or action["poison"] is not None or action["skip"]
