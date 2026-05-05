@@ -5,6 +5,7 @@ import PlayerList from './PlayerList'
 import MessagePanel from './MessagePanel'
 import ActionPanel from './ActionPanel'
 import GameOver from './GameOver'
+import NightPhase from './NightPhase'
 import { createWerewolfSocket } from '../api/wsClient'
 import { appendTimelineEvent, normalizeSnapshot } from '../game/viewModels'
 import '../styles/game.css'
@@ -27,15 +28,17 @@ function WerewolfGame() {
       onClose: () => setConnectionState('closed'),
       onError: () => setConnectionState('error'),
       onMessage: (message) => {
-        if (message.type === 'session_created') {
-          setSessionId(message.payload.session_id)
+        console.log('Received:', message.type, message.payload)
+        if (message.type === 'sessionCreated') {
+          setSessionId(message.payload.sessionId)
         }
-        if (message.type === 'state_snapshot') {
+        if (message.type === 'stateSnapshot') {
           const normalized = normalizeSnapshot(message)
+          console.log('Normalized snapshot:', normalized)
           setSnapshot(normalized)
           setTimeline(normalized.timeline)
         }
-        if (message.type === 'game_event') {
+        if (message.type === 'gameEvent') {
           setTimeline((current) => appendTimelineEvent(current, message))
         }
       },
@@ -46,14 +49,17 @@ function WerewolfGame() {
   }, [])
 
   const handleStartGame = ({ playerName }) => {
-    client?.send('create_session', { player_name: playerName })
+    client?.send('createSession', { playerName })
   }
 
   const handleSubmitAction = (actionData) => {
-    if (snapshot?.availableActions?.[0]?.kind === 'submit_discussion_message') {
-      client?.send('submit_discussion_message', { text: actionData.text, session_id: sessionId })
+    if (snapshot?.availableActions?.[0]?.kind === 'submitDiscussionMessage') {
+      client?.send('submitDiscussionMessage', { text: actionData.text, sessionId })
+    } else if (actionData.actionData) {
+      // Witch action
+      client?.send('submitAction', { actionData: actionData.actionData, sessionId })
     } else {
-      client?.send('submit_action', { target_id: actionData.target_id, session_id: sessionId })
+      client?.send('submitAction', { targetId: actionData.targetId, sessionId })
     }
   }
 
@@ -61,12 +67,24 @@ function WerewolfGame() {
     return <Lobby onStartGame={handleStartGame} connectionState={connectionState} />
   }
 
-  if (snapshot.phase === 'role_reveal') {
-    return <RoleReveal role={snapshot.selfRole} onContinue={() => client?.send('request_next', { session_id: sessionId })} />
+  if (snapshot.phase === 'roleReveal') {
+    return <RoleReveal role={snapshot.selfRole} onContinue={() => client?.send('requestNext', { sessionId })} />
   }
 
-  if (snapshot.phase === 'game_over') {
+  if (snapshot.phase === 'gameOver') {
     return <GameOver winner={snapshot.winner} players={snapshot.players} onRestart={() => window.location.reload()} />
+  }
+
+  if (['nightStart', 'wolfTurn', 'witchTurn'].includes(snapshot.phase)) {
+    return (
+      <NightPhase
+        phase={snapshot.phase}
+        players={snapshot.players}
+        selectedTarget={selectedTarget}
+        onSelectTarget={setSelectedTarget}
+        onSubmitAction={handleSubmitAction}
+      />
+    )
   }
 
   const currentAction = snapshot.availableActions?.[0] || null
@@ -87,7 +105,7 @@ function WerewolfGame() {
       <div className="game-body">
         <PlayerList
           players={snapshot.players}
-          selectable={currentAction?.kind === 'vote' || currentAction?.kind === 'night_action'}
+          selectable={currentAction?.kind === 'vote' || currentAction?.kind === 'nightAction'}
           selectedId={selectedTarget}
           onSelect={(id) => setSelectedTarget(id)}
         />
@@ -108,7 +126,7 @@ function WerewolfGame() {
             discussionMessage={discussionMessage}
             onSelectMessage={setDiscussionMessage}
             onSubmitAction={handleSubmitAction}
-            onSkip={() => client?.send('skip_action', { session_id: sessionId })}
+            onSkip={() => client?.send('skipAction', { sessionId })}
           />
         </div>
 

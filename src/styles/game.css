@@ -629,6 +629,64 @@
   color: var(--text-muted);
 }
 
+/* Night Phase Overlay */
+.night-phase-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, #1a1a2e, #16213e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.night-phase-container {
+  text-align: center;
+}
+
+.moon-icon {
+  font-size: 80px;
+}
+
+.role-icon {
+  font-size: 80px;
+}
+
+.night-instruction {
+  color: #eaeaea;
+}
+
+/* Stars */
+.stars {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+
+.star {
+  color: #ffd700;
+}
+
+/* Player Select Grid */
+.player-select-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .5rem;
+}
+
+.player-select-btn {
+  padding .5rem;
+}
+
+/* Witch Action Buttons */
+.witch-action-buttons {
+  display: flex;
+  flex-direction: column;
+}
+
 /* 响应式 */
 @media (max-width: 1024px) {
   .game-body {
