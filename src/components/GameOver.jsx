@@ -1,7 +1,5 @@
-import { GAME_PHASES, ROLES_BY_ID } from '../game/constants';
-
-function GameOver({ state, onRestart }) {
-  const isWolfWin = state.winner === 'wolf';
+function GameOver({ winner, players, onRestart }) {
+  const isWolfWin = winner === 'wolf'
 
   return (
     <div className="game-over-overlay">
@@ -19,20 +17,16 @@ function GameOver({ state, onRestart }) {
         </div>
 
         <div className="game-over-roles">
-          {state.players.map((player) => {
-            const role = ROLES_BY_ID[player.role];
-            return (
-              <div
-                key={player.id}
-                className={`game-over-role-item ${player.alive ? '' : 'dead'}`}
-              >
-                <span>{role.icon}</span>
-                <span style={{ fontWeight: 600 }}>{player.name}</span>
-                <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{role.name}</span>
-                {!player.alive && <span style={{ color: 'var(--danger-light)', fontSize: 12 }}>💀</span>}
-              </div>
-            );
-          })}
+          {players.map((player) => (
+            <div
+              key={player.id}
+              className={`game-over-role-item ${player.alive ? '' : 'dead'}`}
+            >
+              <span>{player.role}</span>
+              <span style={{ fontWeight: 600 }}>{player.name}</span>
+              {!player.alive && <span style={{ color: 'var(--danger-light)', fontSize: 12 }}>💀</span>}
+            </div>
+          ))}
         </div>
 
         <div className="game-over-buttons">
@@ -42,7 +36,7 @@ function GameOver({ state, onRestart }) {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default GameOver;
+export default GameOver
