@@ -45,3 +45,14 @@ def test_check_winner_returns_good_when_no_wolves_alive():
             player.alive = False
 
     assert check_winner(state) == "good"
+
+
+def test_submit_discussion_message_appends_timeline_and_moves_to_vote():
+    state = start_game(create_game(session_id="s1", player_name="旅人", room_size=6))
+    state = advance_from_role_reveal(state)
+    state = begin_discussion_round(state)
+
+    updated = submit_discussion_message(state, "我先怀疑玩家2")
+
+    assert updated.phase is GamePhase.VOTE
+    assert updated.timeline[-1].text == "旅人：我先怀疑玩家2"
