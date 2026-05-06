@@ -8,10 +8,12 @@ from .game_engine import (
     advance_from_role_reveal,
     advance_to_daybreak,
     advance_to_wolf_turn,
+    advance_to_seer_turn,
     advance_to_witch_turn,
     begin_discussion_round,
     check_winner,
     resolve_night,
+    set_seer_check,
     set_witch_action,
     set_wolf_target,
     start_game,
@@ -120,6 +122,53 @@ async def handle_connection(websocket):
                     ai_target = choose_night_target(state.players)
                     if ai_target:
                         state = set_wolf_target(state, ai_target)
+
+                manager.set_state(sessionId, state)
+
+                # 进入预言家阶段
+                await asyncio.sleep(0.5)
+
+                human = next(p for p in state.players if p.is_human)
+
+                if human.role == "seer":
+                    # 如果人类是预言家，等待人类行动
+                    state = advance_to_seer_turn(state)
+                    manager.set_state(sessionId, state)
+                    await send_snapshot(websocket, state)
+                else:
+                    # AI 预言家行动（跳过查验）
+                    await asyncio.sleep(0.5)
+
+                    # 进入女巫阶段
+                    human = next(p for p in state.players if p.is_human)
+
+                    if human.role == "witch":
+                        # 如果人类是女巫，等待人类行动
+                        state = advance_to_witch_turn(state)
+                        manager.set_state(sessionId, state)
+                        await send_snapshot(websocket, state)
+                    else:
+                        # AI 女巫行动
+                        ai_decision = decide_witch_action(state.players, state.night_actions)
+                        if ai_decision["save"] or ai_decision["poison"]:
+                            state = set_witch_action(state, save_used=ai_decision["save"], poison_target=ai_decision["poison"])
+
+                        # 进入夜晚结算和天亮
+                        resolved, deaths = resolve_night(state)
+                        resolved.deaths = deaths
+
+                        await asyncio.sleep(0.5)
+                        state = advance_to_daybreak(resolved)
+                        manager.set_state(sessionId, state)
+                        await send_snapshot(websocket, state)
+
+            elif state.phase.value == "seerTurn":
+                targetId = payload.get("targetId")
+                human = next(p for p in state.players if p.is_human)
+
+                # 如果人类是预言家，使用人类选择的目标
+                if human.role == "seer" and targetId:
+                    state = set_seer_check(state, targetId)
 
                 manager.set_state(sessionId, state)
 
