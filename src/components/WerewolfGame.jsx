@@ -75,7 +75,17 @@ function WerewolfGame() {
     return <GameOver winner={snapshot.winner} players={snapshot.players} onRestart={() => window.location.reload()} />
   }
 
-  if (['nightStart', 'wolfTurn', 'guardTurn', 'seerTurn', 'witchTurn'].includes(snapshot.phase)) {
+  // 只有当前角色的对应夜间阶段才显示夜间界面
+  const selfRole = snapshot.selfRole
+  const isNightPhaseForRole = (
+    snapshot.phase === 'nightStart' ||
+    (snapshot.phase === 'wolfTurn' && selfRole === 'werewolf') ||
+    (snapshot.phase === 'guardTurn' && selfRole === 'guard') ||
+    (snapshot.phase === 'seerTurn' && selfRole === 'seer') ||
+    (snapshot.phase === 'witchTurn' && selfRole === 'witch')
+  )
+
+  if (isNightPhaseForRole) {
     return (
       <NightPhase
         phase={snapshot.phase}
