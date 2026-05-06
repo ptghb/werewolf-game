@@ -69,37 +69,37 @@ async def auto_progress_night(websocket, sessionId):
 
     # 根据当前阶段决定下一步
     if state.phase.value == "wolfTurn":
-        # 狼人阶段结束，进入预言家阶段
-        if human.role == "seer":
-            # 人类是预言家，等待人类行动
-            state = advance_to_seer_turn(state)
-            manager.set_state(sessionId, state)
-            await send_snapshot(websocket, state)
-        else:
-            # AI 预言家跳过，直接进入女巫阶段
-            if human.role == "witch":
-                # 人类是女巫，等待人类行动
-                state = advance_to_witch_turn(state)
+        # 狼人阶段结束，检查是否有预言家
+        has_seer = any(p.role == "seer" and p.alive for p in state.players)
+
+        if has_seer:
+            # 有存活的预言家，进入预言家阶段
+            if human.role == "seer":
+                # 人类是预言家，等待人类行动
+                state = advance_to_seer_turn(state)
                 manager.set_state(sessionId, state)
                 await send_snapshot(websocket, state)
             else:
-                # AI 女巫行动
-                ai_decision = decide_witch_action(state.players, state.night_actions)
-                if ai_decision["save"] or ai_decision["poison"]:
-                    state = set_witch_action(state, save_used=ai_decision["save"], poison_target=ai_decision["poison"])
-                    manager.set_state(sessionId, state)
-
-                # 进入夜晚结算和天亮
-                resolved, deaths = resolve_night(state)
-                resolved.deaths = deaths
-
-                await asyncio.sleep(0.5)
-                state = advance_to_daybreak(resolved)
-                manager.set_state(sessionId, state)
-                await send_snapshot(websocket, state)
+                # AI 预言家跳过，进入女巫阶段
+                await auto_progress_to_witch(websocket, sessionId)
+        else:
+            # 没有预言家，直接进入女巫阶段
+            await auto_progress_to_witch(websocket, sessionId)
 
     elif state.phase.value == "seerTurn":
         # 预言家阶段结束，进入女巫阶段
+        await auto_progress_to_witch(websocket, sessionId)
+
+
+async def auto_progress_to_witch(websocket, sessionId):
+    """推进到女巫阶段或直接到天亮"""
+    await asyncio.sleep(0.5)
+    state = manager.get_state(sessionId)
+    human = next(p for p in state.players if p.is_human)
+
+    has_witch = any(p.role == "witch" and p.alive for p in state.players)
+
+    if has_witch:
         if human.role == "witch":
             # 人类是女巫，等待人类行动
             state = advance_to_witch_turn(state)
@@ -120,6 +120,15 @@ async def auto_progress_night(websocket, sessionId):
             state = advance_to_daybreak(resolved)
             manager.set_state(sessionId, state)
             await send_snapshot(websocket, state)
+    else:
+        # 没有女巫，直接进入夜晚结算和天亮
+        resolved, deaths = resolve_night(state)
+        resolved.deaths = deaths
+
+        await asyncio.sleep(0.5)
+        state = advance_to_daybreak(resolved)
+        manager.set_state(sessionId, state)
+        await send_snapshot(websocket, state)
 
 
 async def handle_connection(websocket):
