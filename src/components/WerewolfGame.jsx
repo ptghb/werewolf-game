@@ -75,7 +75,7 @@ function WerewolfGame() {
     return <GameOver winner={snapshot.winner} players={snapshot.players} onRestart={() => window.location.reload()} />
   }
 
-  if (['nightStart', 'wolfTurn', 'witchTurn'].includes(snapshot.phase)) {
+  if (['nightStart', 'wolfTurn', 'guardTurn', 'seerTurn', 'witchTurn'].includes(snapshot.phase)) {
     return (
       <NightPhase
         phase={snapshot.phase}
@@ -83,6 +83,7 @@ function WerewolfGame() {
         selectedTarget={selectedTarget}
         onSelectTarget={setSelectedTarget}
         onSubmitAction={handleSubmitAction}
+        lastGuardTarget={snapshot.lastGuardTarget}
       />
     )
   }
