@@ -75,20 +75,28 @@ function WerewolfGame() {
     return <GameOver winner={snapshot.winner} players={snapshot.players} onRestart={() => window.location.reload()} />
   }
 
-  // 只有当前角色的对应夜间阶段才显示夜间界面
+  // 判断是否处于夜间阶段
+  const nightPhases = ['nightStart', 'wolfTurn', 'guardTurn', 'seerTurn', 'witchTurn']
+  const isNightPhase = nightPhases.includes(snapshot.phase)
   const selfRole = snapshot.selfRole
-  const isNightPhaseForRole = (
-    snapshot.phase === 'nightStart' ||
+
+  // 夜间阶段显示逻辑：
+  // - 有对应夜间行动的角色：在他们自己的回合显示操作界面
+  // - 其他角色（平民等）：在整个夜间都显示等待界面
+  const roleHasNightAction = ['werewolf', 'guard', 'seer', 'witch'].includes(selfRole)
+  const isMyNightActionTurn = (
     (snapshot.phase === 'wolfTurn' && selfRole === 'werewolf') ||
     (snapshot.phase === 'guardTurn' && selfRole === 'guard') ||
     (snapshot.phase === 'seerTurn' && selfRole === 'seer') ||
     (snapshot.phase === 'witchTurn' && selfRole === 'witch')
   )
 
-  if (isNightPhaseForRole) {
+  if (isNightPhase) {
+    // 有夜间行动的角色在自己回合看到操作界面，其他角色看到等待界面
+    const displayPhase = (roleHasNightAction && isMyNightActionTurn) ? snapshot.phase : 'nightStart'
     return (
       <NightPhase
-        phase={snapshot.phase}
+        phase={displayPhase}
         players={snapshot.players}
         selectedTarget={selectedTarget}
         onSelectTarget={setSelectedTarget}
