@@ -51,7 +51,7 @@ class HumanConnection:
     async def send(self, message: dict):
         await self.websocket.send(json.dumps(message))
 
-    async def receive_message(self) -> dict | None:
+    async def receive_message(self) -> Optional[dict]:
         try:
             data = await asyncio.wait_for(
                 self.websocket.recv(),
