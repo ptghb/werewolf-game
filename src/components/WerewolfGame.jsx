@@ -19,6 +19,7 @@ function WerewolfGame() {
   const [snapshot, setSnapshot] = useState(null)
   const [timeline, setTimeline] = useState([])
   const [selectedTarget, setSelectedTarget] = useState(null)
+  const [seerResult, setSeerResult] = useState(null)
   const [discussionMessage, setDiscussionMessage] = useState('')
 
   useEffect(() => {
@@ -29,17 +30,51 @@ function WerewolfGame() {
       onError: () => setConnectionState('error'),
       onMessage: (message) => {
         console.log('Received:', message.type, message.payload)
-        if (message.type === 'sessionCreated') {
-          setSessionId(message.payload.sessionId)
-        }
-        if (message.type === 'stateSnapshot') {
-          const normalized = normalizeSnapshot(message)
-          console.log('Normalized snapshot:', normalized)
-          setSnapshot(normalized)
-          setTimeline(normalized.timeline)
-        }
-        if (message.type === 'gameEvent') {
-          setTimeline((current) => appendTimelineEvent(current, message))
+
+        switch (message.type) {
+          case 'sessionCreated':
+            setSessionId(message.payload.sessionId)
+            break
+
+          case 'stateSnapshot':
+            const normalized = normalizeSnapshot(message)
+            console.log('Normalized snapshot:', normalized)
+            setSnapshot(normalized)
+            setTimeline(normalized.timeline || [])
+            break
+
+          case 'seerResult':
+            setSeerResult({
+              targetId: message.payload.targetId,
+              isWerewolf: message.payload.isWerewolf,
+            })
+            break
+
+          case 'daybreak':
+            setTimeline(prev => [...prev, {
+              type: 'daybreak',
+              text: message.payload.deathNames?.length > 0
+                ? `${message.payload.deathNames.join(', ')} 死亡`
+                : '昨晚是平安夜',
+            }])
+            break
+
+          case 'phaseChange':
+            if (snapshot) {
+              setSnapshot(prev => ({
+                ...prev,
+                phase: message.payload.phase,
+                roundNumber: message.payload.roundNumber,
+              }))
+            }
+            break
+
+          case 'gameEvent':
+            setTimeline((current) => appendTimelineEvent(current, message))
+            break
+
+          default:
+            break
         }
       },
     })
@@ -76,23 +111,19 @@ function WerewolfGame() {
   }
 
   // 判断是否处于夜间阶段
-  const nightPhases = ['nightStart', 'wolfTurn', 'guardTurn', 'seerTurn', 'witchTurn']
+  const nightPhases = ['nightStart', 'wolfTurn', 'seerTurn', 'witchTurn']
   const isNightPhase = nightPhases.includes(snapshot.phase)
   const selfRole = snapshot.selfRole
 
-  // 夜间阶段显示逻辑：
-  // - 有对应夜间行动的角色：在他们自己的回合显示操作界面
-  // - 其他角色（平民等）：在整个夜间都显示等待界面
-  const roleHasNightAction = ['werewolf', 'guard', 'seer', 'witch'].includes(selfRole)
+  // 显示逻辑：只有对应角色在自己回合才显示操作界面
+  const roleHasNightAction = ['werewolf', 'seer', 'witch'].includes(selfRole)
   const isMyNightActionTurn = (
     (snapshot.phase === 'wolfTurn' && selfRole === 'werewolf') ||
-    (snapshot.phase === 'guardTurn' && selfRole === 'guard') ||
     (snapshot.phase === 'seerTurn' && selfRole === 'seer') ||
     (snapshot.phase === 'witchTurn' && selfRole === 'witch')
   )
 
   if (isNightPhase) {
-    // 有夜间行动的角色在自己回合看到操作界面，其他角色看到等待界面
     const displayPhase = (roleHasNightAction && isMyNightActionTurn) ? snapshot.phase : 'nightStart'
     return (
       <NightPhase
@@ -101,7 +132,7 @@ function WerewolfGame() {
         selectedTarget={selectedTarget}
         onSelectTarget={setSelectedTarget}
         onSubmitAction={handleSubmitAction}
-        lastGuardTarget={snapshot.lastGuardTarget}
+        seerResult={seerResult}
       />
     )
   }

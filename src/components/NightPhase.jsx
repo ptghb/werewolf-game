@@ -1,9 +1,8 @@
 import WolfAction from './WolfAction'
-import GuardAction from './GuardAction'
 import SeerAction from './SeerAction'
 import WitchAction from './WitchAction'
 
-function NightPhase({ phase, players, selectedTarget, onSelectTarget, onSubmitAction, lastGuardTarget }) {
+function NightPhase({ phase, players, selectedTarget, onSelectTarget, onSubmitAction, seerResult }) {
   const renderContent = () => {
     switch (phase) {
       case 'nightStart':
@@ -25,17 +24,6 @@ function NightPhase({ phase, players, selectedTarget, onSelectTarget, onSubmitAc
           />
         )
 
-      case 'guardTurn':
-        return (
-          <GuardAction
-            players={players}
-            selectedTarget={selectedTarget}
-            onSelectTarget={onSelectTarget}
-            onSubmitAction={onSubmitAction}
-            lastGuardTarget={lastGuardTarget}
-          />
-        )
-
       case 'seerTurn':
         return (
           <SeerAction
@@ -43,6 +31,7 @@ function NightPhase({ phase, players, selectedTarget, onSelectTarget, onSubmitAc
             selectedTarget={selectedTarget}
             onSelectTarget={onSelectTarget}
             onSubmitAction={onSubmitAction}
+            seerResult={seerResult}
           />
         )
 
